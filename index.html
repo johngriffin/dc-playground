@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>dc.js - Bar Chart Example</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="../../css/dc.css"/>
+</head>
+<body>
+
+
+<div id="chart-ring"></div>
+<div id="chart-hist"></div>
+<div id="chart-row"></div>
+
+<script type="text/javascript" src="js/d3.js"></script>
+<script type="text/javascript" src="js/crossfilter.js"></script>
+<script type="text/javascript" src="js/dc.js"></script>
+<script type="text/javascript">
+
+
+var genderRingChart   = dc.pieChart("#chart-ring"),
+    spendHistChart  = dc.barChart("#chart-hist"),
+    yearRowChart = dc.rowChart("#chart-row");
+
+d3.csv("observations.csv", function(error, obs) {
+        
+    // set crossfilter
+    var ndx = crossfilter(obs),
+        genderDim  = ndx.dimension(function(d) {return d.gender;}),
+        spendDim = ndx.dimension(function(d) {return d.value;}),
+        yearDim  = ndx.dimension(function(d) {return d.year;}),
+        deathsPerGender = genderDim.group().reduceSum(function(d) {return +d.value;}),
+        deathsPerYear = yearDim.group().reduceSum(function(d) {return +d.value;}),
+        spendHist    = spendDim.group().reduceCount();
+
+    genderRingChart
+        .width(200).height(200)
+        .dimension(genderDim)
+        .group(deathsPerGender)
+        .innerRadius(50);
+
+    spendHistChart
+        .width(300).height(200)
+        .dimension(spendDim)
+        .group(spendHist)
+        .x(d3.scale.linear().domain([0,1000]))
+        .elasticY(true);
+
+
+     yearRowChart
+        .width(350).height(400)
+        .dimension(yearDim)
+        .group(deathsPerYear)
+        .elasticX(true);
+        
+    dc.renderAll();
+});
+
+</script>
+
+</body>
+</html>
